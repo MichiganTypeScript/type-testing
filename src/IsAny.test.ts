@@ -4,7 +4,7 @@ import { Equal } from './Equal';
 
 type Cases = [
   Expect<Equal<IsAny<any>, true>>,
-  Expect<Equal<IsAny<any | 1>, true>>,
+  Expect<Equal<IsAny<any | 1>, true>>, // a type resolving to any
 
   Expect<Equal<IsAny<undefined>, false>>,
   Expect<Equal<IsAny<unknown>, false>>,

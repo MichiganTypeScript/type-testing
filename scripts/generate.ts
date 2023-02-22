@@ -25,12 +25,13 @@ const generate = () => {
     })
   });
 
-  let readme = readFileSync('./scripts/README.source.md', 'utf-8');
+  let readme = readFileSync('./scripts/API.source.md', 'utf-8');
   
   const regex = /\<\!-- Insert JSDoc: (?<typeName>.*) --\>/gm;
   readme = readme.split('\n').flatMap(line => {
     try {
       const { typeName } = line.matchAll(regex).next().value.groups;
+      console.log('replacing: ', typeName);
       return declarations[typeName]
     } catch (error) {
     }
@@ -39,7 +40,7 @@ const generate = () => {
   }).join('\n');
 
 
-  writeFileSync('./README.md', readme);
+  writeFileSync('./API.md', readme);
 };
 
 generate();

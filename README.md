@@ -1,19 +1,85 @@
-[name TBD]
+# type-testing
 
-<!-- omit in toc -->
-# `type-testing`
+> 🌱 A micro library for testing your TypeScript types.
 
-Sometimes your project's TypeScript types really matter.  Use `type-testing` to ship with confidence.
+Sometimes your project's TypeScript types really matter.  More and more often, the TypeScript types _themselves_ are a core part of the product.  But there hasn't been a good way to make sure the types don't subtly break from day to day.  That's what `type-testing` solves.
 
-As libraries with incredible type inferencing like Zod, tRPC, and TanStack Query have gained popularity, we've seen more and more projects where the TypeScript types _themselves_ are a core part of the shippable product.  But there hasn't been a good way to make sure they don't subtly break from day to day.
+A lot of popular projects with incredible type inferencing already use this approach.  For example [Zod](https://github.com/colinhacks/zod/blob/master/src/helpers/util.ts#L2), [Tan](https://github.com/TanStack/query/blob/eeec5f77bc9a703ffb6a6d283dcedada34aa3c75/packages/react-query/src/__tests__/useQuery.types.test.tsx#L3-L11)[Stack](https://github.com/TanStack/query/blob/eeec5f77bc9a703ffb6a6d283dcedada34aa3c75/packages/solid-query/src/__tests__/createQuery.types.test.tsx#L3) [Query](https://github.com/TanStack/query/blob/eeec5f77bc9a703ffb6a6d283dcedada34aa3c75/packages/vue-query/src/__tests__/test-utils.ts#L54), [zustand](https://github.com/pmndrs/zustand/blob/fbfcdc54e679cf1cb6d887078b4b9b19319417e9/tests/types.test.tsx#L106), [tRPC](https://github.com/trpc/trpc/blob/main/packages/tests/server/inferenceUtils.ts#L116), [MUI](https://github.com/mui/material-ui/blob/master/packages/mui-styled-engine/src/index.d.ts#L65), [type-fest](https://github.com/sindresorhus/type-fest/blob/main/source/is-equal.d.ts#L26), [ts-reset](https://github.com/total-typescript/ts-reset/blob/main/src/tests/utils.ts#L7), and the [TypeScript Challenges](https://github.com/type-challenges/type-challenges/blob/main/utils/index.d.ts#L7) all have variants of the same code.
 
-| Before                                                                                                                                                              | After                                                                                                                                               |
-|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
-| :dizzy_face: Your inferred types work great on Monday, but by Friday you realize they don't infer correctly anymore.                                                | :green_salad: At 11:53am on Wednesday, a type test fails and you realize you should probably take a break for lunch before you break anything else. |
-| :see_no_evil: You want to make awesome TypeScript types.. but every time you try to add or fix something, you are left wondering if you broke something else        | :mechanical_arm: You can can refactor with confidence.                                                                                             |
-| :crossed_fingers: Your open source project can be tough to keep up with.  You want to accept community PRs but you&#39;re not sure if they possibly break something | :mage: You can be confident that a community PR won't break anything, and you can request new tests that cover any areas of concern                 |
+## Goals
 
-## Why not just rely on explicit return types?
+1. Bring this commonly copy-pasta'd code into one place where the utilities are tested and correct.
+2. Demonstrate how to test types in TypeScript project.
+
+| Before testing your types                                                                                                                                             | After using `type-testing`                                                                                                                          |
+|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| :dizzy_face: Your inferred types work great on Monday, but by Friday you realize they don't infer correctly anymore.                                                  | :green_salad: At 11:53am on Wednesday, a type test fails and you realize you should probably stop to eat some lunch before you break anything else. |
+| :see_no_evil: You want to make awesome TypeScript types.. but every time you try to add or fix something, you are left wondering if you broke something else.         | :mechanical_arm: You can refactor with confidence.                                                                                              |
+| :crossed_fingers: Your open source project can be tough to keep up with.  You want to accept community PRs but you're not sure if they possibly break something.      | :partying_face: A community PR won't break anything, and you can request new tests that cover any areas of concern.                                 |
+| :clown_face: You wonder about what will happen if there's some weird TypeScript edge-case where `never` or `unknown` or `any` is passed to your type by an end-user. | :mage: You don't have to be a TypeScript wizard to write great TypeScript types.  You can write a test and be sure things will work as expected!    |
+
+## Quickstart
+
+Say you have a function with an inferred type:
+
+```ts
+const shoutItOutLoud = <T extends string>(str: T) => (
+  `${str.toUpperCase() as Uppercase<T>}!!!` as const
+);
+```
+
+You can test the types for that function right in exactly the same place as your regular unit tests.
+
+```ts
+import { Expect, Equal } from 'type-testing';
+import { shoutItOutLoud } from './shout';
+
+describe('shoutItOudLoud', () => {
+  it('has the intended API surface', () => {
+    // you can test your function's inputs 🧪
+    //
+    // note:
+    // this test will fail if anyone adds or removes an argument in the future 🔥
+    type test_params = Expect<Equal<
+      Parameters<typeof shoutItOutLoud>,
+      [string]
+    >>;
+
+    // as well as your outputs 💩
+    type test_return = Expect<Equal<
+      ReturnType<typeof shoutItOutLoud>,
+      `${Uppercase<string>}!!!`
+    >>;
+
+    // of course, you can test exact usages 🥷
+    const hello = shoutItOutLoud('hello');
+    type test_hello = Expect<Equal<typeof hello, 'HELLO!!!'>>;
+
+    // or test inline if your runner supports it 🛼
+    // (but then you may have to duplicate inputs and outputs)
+    expect<'HELLO!!!'>(hello).toEqual('HELLO!!!');
+  });
+});
+```
+
+## :family_man_woman_girl_boy: Your New Type Testing Family
+
+[See API Guide](./API.md)
+
+- [`Equal`](./API.md#equal)
+- [`NotEqual`](./API.md#notequal)
+- [`Expect`](./API.md#expect)
+- [`ExpectFalse`](./API.md#expectfalse)
+- [`IsAny`](./API.md#isany)
+- [`IsNever`](./API.md#isnever)
+- [`IsTuple`](./API.md#istuple)
+- [`IsUnion`](./API.md#isunion)
+- [`TrueCases`](./API.md#truecases)
+- [`FalseCases`](./API.md#falsecases)
+
+## FAQ
+
+### Why not just rely on explicit return types?
 
 Lots of reasons.
 
@@ -21,256 +87,66 @@ Lots of reasons.
 1. Because being able to write these tests while you're working enables you to do [TDD](https://en.wikipedia.org/wiki/Test-driven_development) with the types themselves.  Even if you don't do full-blown 100% TDD, it's pretty useful to be able to be sure that you've got your core use-cases covered.  Then, you can refactor and improve your code with a lot more confidence.
 1. Because return types [can lie](https://youtu.be/I6V2FkW1ozQ?t=439).
 
-## :family_man_woman_girl_boy: Your New Type Testing Family
+### Is this a new idea?
 
-- [`Equal`](#equal)
-- [`NotEqual`](#notequal)
-- [`Expect`](#expect)
-- [`ExpectFalse`](#expectfalse)
-- [`IsAny`](#isany)
-- [`IsNever`](#isnever)
-- [`IsTuple`](#istuple)
-- [`IsUnion`](#isunion)
-- [`TrueCases`](#truecases)
-- [`FalseCases`](#falsecases)
-
-### `Equal`
-
-returns `true` if the provided arguments resolve to the same TypeScript value.
-
-`Equal` is the cornerstone of TypeScript type testing.
-
-### `NotEqual`
-
-The opposite of `Equal`, will return false if the two inputs are not equal.
-
-### `Expect`
-
-errors at TypeScript compile-time if passed a value that is not `true`:
-
-the following will not error and will return `true`;
-
-```ts
-Expect<true>;
-```
-
-all other inputs will return `false`.
-
-all other inputs will error, except for `never`.
-
-### `ExpectFalse`
-
-A type that will error if passed anything other than literal `false` or `never`
-
-The following will not error:
-
-```ts
-IsFalse<false>;
-IsFalse<never>;
-```
-
-The following will error:
-
-```ts
-IsFalse<true>;
-IsFalse<boolean>;
-IsFalse<1 | false>;
-IsFalse<'false'>;
-IsFalse<''>;
-IsFalse<0>;
-IsFalse<undefined>;
-IsFalse<null>;
-IsFalse<unknown>;
-```
-
-### `IsAny`
-
-Returns `true` if the input is of type `any` and false for all other inputs.
-
-The following will return true:
-
-```ts
-IsAny<any>;
-```
-
-The following will return false:
-
-```ts
-IsAny<undefined>;
-IsAny<unknown>;
-IsAny<never>;
-IsAny<string>;
-```
-
-Note unions with `any` resolve to `any`, so:
-
-```ts
-IsAny<string | any>;
-```
-
-returns `true`;
-
-### `IsNever`
-
-returns `true` when passed a literal `never`:
-
-```ts
-IsNever<never>;
-```
-
-returns `false` for all other values
-
-### `IsTuple`
-
-returns `true` for types that are Tuples
-
-the following all return `true`:
-
-```ts
-IsTuple<[]>;
-IsTuple<[number]>;
-IsTuple<readonly [1]>;
-```
-
-the following all return `false`:
-
-```ts
-IsTuple<{ length: 1 }>;
-IsTuple<number[]>;
-IsTuple<never>;
-```
-
-### `IsUnion`
-
-returns `true` when passed something that resolves to a union
-
-the following all return `true`:
-
-```ts
-IsUnion<undefined | null | void | ''>;
-IsUnion<{ a: string } | { a: number }>;
-IsUnion<string | number>;
-IsUnion<'a' | 'b' | 'c' | 'd'>;
-IsUnion<boolean>;
-```
-
-the following all return `false`:
-
-```ts
-IsUnion<string>;
-IsUnion<{ a: string | number }>;
-IsUnion<[string | number]>;
-```
-
-_Note_ how TypeScript treats types that resolve to a non-union.
-
-the following all return `false`:
-
-```ts
-IsUnion<string | never>; // resolves to `string`
-IsUnion<string | unknown>; // resolves to `unknown`
-IsUnion<string | any>; // resolves to `any`
-IsUnion<string | 'a'>; // `resolves to `string`
-IsUnion<never>; // `never` is an empty union
-```
-
-### `TrueCases`
-
-A helper type that will allow you to test many cases at once with minimal boilerplate.
-
-instead of
-
-```ts
-type TrueCases = [
-  Expect<Equal<IsUnion<undefined | null | void | ''>, true>>,
-  Expect<Equal<IsUnion<{ a: string } | { a: number }>, true>>,
-  Expect<Equal<IsUnion<string | number>, true>>,
-  Expect<Equal<IsUnion<'a' | 'b' | 'c' | 'd'>, true>>,
-];
-```
-
-you can write:
-
-```ts
-type T = TrueCases<[
-  IsUnion<undefined | null | void | ''>,
-  IsUnion<{ a: string } | { a: number }>,
-  IsUnion<string | number>,
-  IsUnion<'a' | 'b' | 'c' | 'd'>,
-]>;
-```
-
-The drawback of this type is that the error message is not as friendly if one of the test cases has an error:
-
-```text
-Type '[true, true, false, true]' does not satisfy the constraint 'readonly true[]'.
-  Type 'boolean' is not assignable to type 'true'.ts(2344)
-```
-
-Whereas with inline `Expect` and `Equal` you'd get an error just on the line of the failing test.
-
-If the tradeoff of debuggability is desirable to you, then use this type.
-
-### `FalseCases`
-
-A helper type that will allow you to test many cases at once with minimal boilerplate.
-
-instead of
-
-```ts
-type FalseCases = [
-  Expect<Equal<IsNever<''>, false>>,
-  Expect<Equal<IsNever<undefined>, false>>,
-  Expect<Equal<IsNever<null>, false>>,
-  Expect<Equal<IsNever<[]>, false>>,
-  Expect<Equal<IsNever<{}>, false>>,
-  Expect<Equal<IsNever<never | string>, false>>,
-];
-```
-
-you can write:
-
-```ts
-type F = FalseCases<[
-  IsNever<''>,
-  IsNever<undefined>,
-  IsNever<null>,
-  IsNever<[]>,
-  IsNever<{}>,
-  IsNever<never | string>,
-]>;
-```
-
-The drawback of this type is that the error message is not as friendly if one of the test cases has an error:
-
-```text
-Type '[false, false, true, false, false, false]' does not satisfy the constraint 'readonly false[]'.
-  Type 'boolean' is not assignable to type 'false'.ts(2344)
-```
-
-Whereas with inline `Expect` and `Equal` you'd get an error just on the line of the failing test.
-
-If the tradeoff of debuggability is desirable to you, then use this type.
-
-Note that because of the constraints
-
-## FAQ
+Nope!  It's been knocking around in the TypeScript community for a while, but there has yet to be someone to write tests for these types (ironically) and package them into a micro library.
 
 ### Can `Expect` and `Equal` be combined to a type `ExpectEqual`?
 
 Unfortunately, no.  The power of this approach is that it will error at build time while being type checked.
 
-### Why aren't there aliases for `Expect` like `IsTrue` and `ExpectTrue`, as well as aliases for `ExpectFalse` like `IsFalse`?
+### Where are all the aliases?
 
-Because "no API is the best API".  The hope is to avoid people having to learn or memorize the quirks of different assertion APIs.  This is a pretty cutting-edge part of the TypeScript world, but if you look around, you're going to find that 98% (or more!) of usage just needs `Expect` and `Equal`.
+> "no API is the best API".
 
-### Is this a new idea?
+You may have seen a version of this code copied around that contained aliases for `Expect` like `IsTrue` and `ExpectTrue`, as well as aliases for `ExpectFalse` like `IsFalse`.  The hope is to avoid people having to learn or memorize the quirks of different assertion APIs.  This is still a pretty cutting-edge part of the TypeScript world, but if you look around, you're going to find that 98% of the time (or more!) you just need `Expect` and `Equal`.
 
-Nope!  It's been knocking around in the TypeScript community for a while, but there has yet to be someone to, hilariously enough, write tests for these types and package them into a micro library.
-
-### What about \_\_\_\_\_
+### What about \_\_\_\_\_ other way of testing types?
 
 You might be familiar with other projects that attempt to do something similar.  Here's a quick overview:
 
 - [`eslint-plugin-expect-type`](https://www.npmjs.com/package/eslint-plugin-expect-type) is powerful, but relies on comments and requires ESLint.  This means that refactoring and renaming will get out of sync because the tests themselves aren't actually code.  On top of that, there's a problem with the order of unions in TypeScript not being stable from release-to-release, which causes very annoying false positive test failures that you have to manually fix.
-- [`tsd`](https://github.com/SamVerschueren/tsd) is nice, but it's not for type layer itself.  For that matter, there are a few nice alternatives if you can integrate this into your test runner, e.g. Jest's [Expect](https://github.com/facebook/jest/blob/main/packages/expect/src/types.ts#L99) type is built into it's assertion functions.  The same goes for [`expect-type`](https://github.com/mmkal/expect-type).
+- [`tsd`](https://github.com/SamVerschueren/tsd) is nice, but it's not for the type layer itself.  For that matter, there are a few nice alternatives if you can integrate this into your test runner, e.g. Jest's [Expect](https://github.com/facebook/jest/blob/main/packages/expect/src/types.ts#L99) type is built into it's assertion functions.  The same goes for [`expect-type`](https://github.com/mmkal/expect-type).
+
+### What about ESLint/TypeScript complaining of unused variables?
+
+If you have [noUnusedLocals](https://www.typescriptlang.org/tsconfig#noUnusedLocals) enabled, you can safely disable it just for your [`tsconfig.eslint.json`](https://typescript-eslint.io/linting/typed-linting/monorepos#one-root-tsconfigjson).  It can still be left on for building for production.
+
+For ESLint, there's a more powerful way to do it which is just to turn off this specific pattern for test files:
+
+```ts
+/** @type { import('@typescript-eslint/utils').TSESLint.Linter.Config } */
+const config = {
+  overrides: [
+    {
+      files: ['**/*.test.ts', '**/*.test.tsx'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': [
+          'error',
+          {
+            vars: 'all',
+            varsIgnorePattern: 'test_.*', // TypeScript type tests
+            argsIgnorePattern: '_',
+          },
+        ],
+      },
+    },
+  ],
+};
+```
+
+### So, it looks like TypeScript has jumped the shark, eh? 🦈🌊🦈
+
+Well.  This level of type testing isn't "for everyone".  It's largely for library authors or projects that have very powerful inferred types.
+
+If:
+
+- you don't use a lot of generics
+- you aren't using TypeScript `strict` mode
+- you use `any` a lot
+- your codebase has hundreds of `// @ts-ignore` lines
+- your library or project doesn't mind breaking changes at the type layer
+
+...then this library might not be something you'd benefit from introducing.
+
+But as we start seeing projects like Zod, where the types "working" is fully half of the entire project (or type-fest where it's the _whole_ project).. it starts to feel a little lopsided to be able to write tests and assertions about the JavaScript part, but not as much about the TypeScript part.

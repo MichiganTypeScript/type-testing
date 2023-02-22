@@ -44,8 +44,8 @@ import { IsTuple } from "./IsTuple";
  * Note that because of the constraints
  */
 export type FalseCases<T extends readonly false[]> =
-  true extends Equal<T[number], false>
-  ? true extends IsTuple<T>
+  Equal<T[number], false> extends true
+  ? IsTuple<T> extends true
     ? true
     : false
   : false;

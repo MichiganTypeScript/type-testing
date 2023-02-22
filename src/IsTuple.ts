@@ -20,7 +20,7 @@ import { IsNever } from "./IsNever";
  * ```
  */
 export type IsTuple<T> =
-  true extends IsNever<T>
+  IsNever<T> extends true
   ? false
   : T extends readonly unknown[]
     ? number extends T["length"]
