@@ -70,7 +70,8 @@ Consider, though, that many libraries are shipping TypeScript types _as part of 
 ```ts
 type ShoutItOutLoud<T extends string> = `${Uppercase<T>}!!!`;
 type Hello = 'hello';
-type test_Hello = Expect<Equal<ShoutItOutLoud<Hello>, 'HELLO!!!'>>
+// Will error at compile time if the the types don't match
+Expect<Equal<ShoutItOutLoud<Hello>, 'HELLO!!!'>>
 ```
 
 ### Example: testing functions
