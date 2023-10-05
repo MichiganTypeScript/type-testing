@@ -2,9 +2,9 @@
 
 > 🌱 A micro library for testing your TypeScript types.
 
-Sometimes your project's TypeScript types really matter.  More and more often, the TypeScript types _themselves_ are a core part of the product.  But there hasn't been a good way to make sure the types don't subtly break from day to day.  That's what `type-testing` solves.
+Sometimes your project's TypeScript types really matter.  More and more often, the TypeScript types _themselves_ are a core part of the product.  But there hasn't been a good way to make sure the types don't subtly break from day to day.  This is the problem `type-testing` solves.
 
-A lot of popular projects with incredible type inferencing already use this approach.  For example [Zod](https://github.com/colinhacks/zod/blob/master/src/helpers/util.ts#L2), [Tan](https://github.com/TanStack/query/blob/eeec5f77bc9a703ffb6a6d283dcedada34aa3c75/packages/react-query/src/__tests__/useQuery.types.test.tsx#L3-L11)[Stack](https://github.com/TanStack/query/blob/eeec5f77bc9a703ffb6a6d283dcedada34aa3c75/packages/solid-query/src/__tests__/createQuery.types.test.tsx#L3) [Query](https://github.com/TanStack/query/blob/eeec5f77bc9a703ffb6a6d283dcedada34aa3c75/packages/vue-query/src/__tests__/test-utils.ts#L54), [zustand](https://github.com/pmndrs/zustand/blob/fbfcdc54e679cf1cb6d887078b4b9b19319417e9/tests/types.test.tsx#L106), [tRPC](https://github.com/trpc/trpc/blob/main/packages/tests/server/inferenceUtils.ts#L116), [MUI](https://github.com/mui/material-ui/blob/master/packages/mui-styled-engine/src/index.d.ts#L65), [type-fest](https://github.com/sindresorhus/type-fest/blob/main/source/is-equal.d.ts#L26), [ts-reset](https://github.com/total-typescript/ts-reset/blob/main/src/tests/utils.ts#L7), and the [TypeScript Challenges](https://github.com/type-challenges/type-challenges/blob/main/utils/index.d.ts#L7) all have variants of the same code.  We collected that code here and wrote tests for them (yes, test inception).
+A lot of popular projects with incredible type inferencing already use the code in `type-testing`.  For example [Zod](https://github.com/colinhacks/zod/blob/master/src/helpers/util.ts#L2), [Tan](https://github.com/TanStack/query/blob/eeec5f77bc9a703ffb6a6d283dcedada34aa3c75/packages/react-query/src/__tests__/useQuery.types.test.tsx#L3-L11)[Stack](https://github.com/TanStack/query/blob/eeec5f77bc9a703ffb6a6d283dcedada34aa3c75/packages/solid-query/src/__tests__/createQuery.types.test.tsx#L3) [Query](https://github.com/TanStack/query/blob/eeec5f77bc9a703ffb6a6d283dcedada34aa3c75/packages/vue-query/src/__tests__/test-utils.ts#L54), [zustand](https://github.com/pmndrs/zustand/blob/fbfcdc54e679cf1cb6d887078b4b9b19319417e9/tests/types.test.tsx#L106), [tRPC](https://github.com/trpc/trpc/blob/main/packages/tests/server/inferenceUtils.ts#L116), [MUI](https://github.com/mui/material-ui/blob/master/packages/mui-styled-engine/src/index.d.ts#L65), [type-fest](https://github.com/sindresorhus/type-fest/blob/main/source/is-equal.d.ts#L26), [ts-reset](https://github.com/total-typescript/ts-reset/blob/main/src/tests/utils.ts#L7), and the [TypeScript Challenges](https://github.com/type-challenges/type-challenges/blob/main/utils/index.d.ts#L7) all have variants of the same code.  We collected that code here and wrote tests for them (yes: test inception).
 
 ## Goals
 
@@ -70,8 +70,12 @@ Consider, though, that many libraries are shipping TypeScript types _as part of 
 ```ts
 type ShoutItOutLoud<T extends string> = `${Uppercase<T>}!!!`;
 type Hello = 'hello';
-type test_Hello = Expect<Equal<ShoutItOutLoud<Hello>, 'HELLO!!!'>>
+
+// Compiler error! this should be `HELLO!!!` (all caps)
+type test_Hello = Expect<Equal<ShoutItOutLoud<Hello>, 'HeLLO!!!'>>
 ```
+
+> protip: you can see some great examples of what these kinds of test looks like [in this very repo itself](./src/Equal.test.ts).
 
 ### Example: testing functions
 
@@ -124,7 +128,9 @@ Nope!  It's been knocking around in the TypeScript community for a while, but th
 
 ### Can `Expect` and `Equal` be combined to a type `ExpectEqual`?
 
-Unfortunately, no.  The power of this approach is that it will error at build time while being type checked.
+Unfortunately, no.  The power of this approach taken in this library is that it will error at build time while being type checked, and currently there's no way to combine the two utilities.
+
+If you do happen to find a way... we're all waiting to hear about it!  File an issue!!
 
 ### Where are all the aliases?
 
@@ -138,6 +144,7 @@ You might be familiar with other projects that attempt to do something similar. 
 
 - [`eslint-plugin-expect-type`](https://www.npmjs.com/package/eslint-plugin-expect-type) is powerful, but relies on comments and requires ESLint.  This means that refactoring and renaming will get out of sync because the tests themselves aren't actually code.  On top of that, there's a problem with the order of unions in TypeScript not being stable from release-to-release, which causes very annoying false positive test failures that you have to manually fix.
 - [`tsd`](https://github.com/SamVerschueren/tsd) is nice, but it's not for the type layer itself.  For that matter, there are a few nice alternatives if you can integrate this into your test runner, e.g. Jest's [Expect](https://github.com/facebook/jest/blob/main/packages/expect/src/types.ts#L99) type is built into it's assertion functions.  The same goes for [`expect-type`](https://github.com/mmkal/expect-type).
+- [`ts-expect`](https://github.com/TypeStrong/ts-expect) is probably the most similar currently existing thing but it is built more for things that have runtime manifestations (i.e. things that JavaScript, unlike TypeScript types).  The code in this library is already battle tested and used by lots of production projects.
 
 ### What about ESLint/TypeScript complaining of unused variables?
 
