@@ -40,8 +40,6 @@ import { IsTuple } from "./IsTuple";
  * Whereas with inline `Expect` and `Equal` you'd get an error just on the line of the failing test.
  *
  * If the tradeoff of debuggability is desirable to you, then use this type.
- * 
- * Note that because of the constraints
  */
 export type FalseCases<T extends readonly false[]> =
   Equal<T[number], false> extends true

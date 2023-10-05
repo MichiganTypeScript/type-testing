@@ -237,5 +237,3 @@ Type '[false, false, true, false, false, false]' does not satisfy the constraint
 Whereas with inline `Expect` and `Equal` you'd get an error just on the line of the failing test.
 
 If the tradeoff of debuggability is desirable to you, then use this type.
-
-Note that because of the constraints

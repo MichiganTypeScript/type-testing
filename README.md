@@ -4,7 +4,7 @@
 
 Sometimes your project's TypeScript types really matter.  More and more often, the TypeScript types _themselves_ are a core part of the product.  But there hasn't been a good way to make sure the types don't subtly break from day to day.  That's what `type-testing` solves.
 
-A lot of popular projects with incredible type inferencing already use this approach.  For example [Zod](https://github.com/colinhacks/zod/blob/master/src/helpers/util.ts#L2), [Tan](https://github.com/TanStack/query/blob/eeec5f77bc9a703ffb6a6d283dcedada34aa3c75/packages/react-query/src/__tests__/useQuery.types.test.tsx#L3-L11)[Stack](https://github.com/TanStack/query/blob/eeec5f77bc9a703ffb6a6d283dcedada34aa3c75/packages/solid-query/src/__tests__/createQuery.types.test.tsx#L3) [Query](https://github.com/TanStack/query/blob/eeec5f77bc9a703ffb6a6d283dcedada34aa3c75/packages/vue-query/src/__tests__/test-utils.ts#L54), [zustand](https://github.com/pmndrs/zustand/blob/fbfcdc54e679cf1cb6d887078b4b9b19319417e9/tests/types.test.tsx#L106), [tRPC](https://github.com/trpc/trpc/blob/main/packages/tests/server/inferenceUtils.ts#L116), [MUI](https://github.com/mui/material-ui/blob/master/packages/mui-styled-engine/src/index.d.ts#L65), [type-fest](https://github.com/sindresorhus/type-fest/blob/main/source/is-equal.d.ts#L26), [ts-reset](https://github.com/total-typescript/ts-reset/blob/main/src/tests/utils.ts#L7), and the [TypeScript Challenges](https://github.com/type-challenges/type-challenges/blob/main/utils/index.d.ts#L7) all have variants of the same code.
+A lot of popular projects with incredible type inferencing already use this approach.  For example [Zod](https://github.com/colinhacks/zod/blob/master/src/helpers/util.ts#L2), [Tan](https://github.com/TanStack/query/blob/eeec5f77bc9a703ffb6a6d283dcedada34aa3c75/packages/react-query/src/__tests__/useQuery.types.test.tsx#L3-L11)[Stack](https://github.com/TanStack/query/blob/eeec5f77bc9a703ffb6a6d283dcedada34aa3c75/packages/solid-query/src/__tests__/createQuery.types.test.tsx#L3) [Query](https://github.com/TanStack/query/blob/eeec5f77bc9a703ffb6a6d283dcedada34aa3c75/packages/vue-query/src/__tests__/test-utils.ts#L54), [zustand](https://github.com/pmndrs/zustand/blob/fbfcdc54e679cf1cb6d887078b4b9b19319417e9/tests/types.test.tsx#L106), [tRPC](https://github.com/trpc/trpc/blob/main/packages/tests/server/inferenceUtils.ts#L116), [MUI](https://github.com/mui/material-ui/blob/master/packages/mui-styled-engine/src/index.d.ts#L65), [type-fest](https://github.com/sindresorhus/type-fest/blob/main/source/is-equal.d.ts#L26), [ts-reset](https://github.com/total-typescript/ts-reset/blob/main/src/tests/utils.ts#L7), and the [TypeScript Challenges](https://github.com/type-challenges/type-challenges/blob/main/utils/index.d.ts#L7) all have variants of the same code.  We collected that code here and wrote tests for them (yes, test inception).
 
 ## Goals
 
@@ -20,7 +20,7 @@ A lot of popular projects with incredible type inferencing already use this appr
 
 ## Quickstart
 
-Say you have a function with an inferred type:
+What if you have a fancy TypeScript function with an inferred type in your library:
 
 ```ts
 const shoutItOutLoud = <T extends string>(str: T) => (
@@ -28,7 +28,18 @@ const shoutItOutLoud = <T extends string>(str: T) => (
 );
 ```
 
-You can test the types for that function right in exactly the same place as your regular unit tests.
+The type of this function isn't just `string`, it's _the actual result_ as a TypeScript string literal.  But how do you write a test for that behavior of your library?
+
+Now you can write a test for the type for your function!
+
+```ts
+import { Expect, Equal } from "type-testing";
+
+const hello = shoutItOutLoud('hello');
+type test_hello = Expect<Equal<typeof hello, 'HELLO!!!'>>;
+```
+
+You can do this right alongside your regular tests!
 
 ```ts
 import { Expect, Equal } from 'type-testing';
@@ -36,30 +47,48 @@ import { shoutItOutLoud } from './shout';
 
 describe('shoutItOudLoud', () => {
   it('has the intended API surface', () => {
-    // you can test your function's inputs 🧪
-    //
-    // note:
-    // this test will fail if anyone adds or removes an argument in the future 🔥
-    type test_params = Expect<Equal<
-      Parameters<typeof shoutItOutLoud>,
-      [string]
-    >>;
-
-    // as well as your outputs 💩
-    type test_return = Expect<Equal<
-      ReturnType<typeof shoutItOutLoud>,
-      `${Uppercase<string>}!!!`
-    >>;
-
-    // of course, you can test exact usages 🥷
     const hello = shoutItOutLoud('hello');
+
+    // this tests the type
     type test_hello = Expect<Equal<typeof hello, 'HELLO!!!'>>;
 
-    // or test inline if your runner supports it 🛼
-    // (but then you may have to duplicate inputs and outputs)
-    expect<'HELLO!!!'>(hello).toEqual('HELLO!!!');
+    // this tests the runtime behavior
+    expect(hello).toEqual('HELLO!!!');
   });
 });
+```
+
+> [!IMPORTANT]
+> Now, if your fancy type isn't **exactly** correct, your test suite will fail!
+>
+> <sup><sub>just like you'd want it to</sub></sup>
+
+## Example: type-only libraries
+
+Consider, though, that many libraries are shipping TypeScript types _as part of the product_.  In this case, they have very little way to be sure that the types they're shipping to their users are working as intended.  Consider the above but written in types:
+
+```ts
+type ShoutItOutLoud<T extends string> = `${Uppercase<T>}!!!`;
+type Hello = 'hello';
+type test_Hello = Expect<Equal<ShoutItOutLoud<Hello>, 'HELLO!!!'>>
+```
+
+### Example: testing functions
+
+Now, you can write tests that will lock-in the intended behavior _of your types_.
+
+If someone changes a type parameter or return type accidentally, now you'll know about it right away!
+
+```ts
+type test_params = Expect<Equal<
+  Parameters<typeof shoutItOutLoud>,
+  [string]
+>>;
+
+type test_return = Expect<Equal<
+   ReturnType<typeof shoutItOutLoud>,
+   `${Uppercase<string>}!!!`
+>>;
 ```
 
 ## :family_man_woman_girl_boy: Your New Type Testing Family
@@ -76,6 +105,8 @@ describe('shoutItOudLoud', () => {
 - [`IsUnion`](./API.md#isunion)
 - [`TrueCases`](./API.md#truecases)
 - [`FalseCases`](./API.md#falsecases)
+
+Also, if you just install and start using the library you'll discover that every type has lots of JSDoc description to help you along the way!
 
 ## FAQ
 
@@ -150,3 +181,15 @@ If:
 ...then this library might not be something you'd benefit from introducing.
 
 But as we start seeing projects like Zod, where the types "working" is fully half of the entire project (or type-fest where it's the _whole_ project).. it starts to feel a little lopsided to be able to write tests and assertions about the JavaScript part, but not as much about the TypeScript part.
+
+### Why not just pass the type to the generic of `expect`?
+
+Depending on your testing library, you may be able to do something like this:
+
+```ts
+expect<'HELLO!!!'>(hello).toEqual('HELLO!!!');
+```
+
+This approach can work, but there are lots of libraries that operate exclusively at the type level.  They could never use such an approach because they don't have any runtime code with which to test.
+
+You also put yourself at the mercy of the error message generated by the expect types.  With type-testing, it's quite clear that the types are wrong, and therefore much more clear what you need to fix.

@@ -1,21 +1,39 @@
 {
   "name": "type-testing",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "tsc --noEmit",
-    "build:markdown": "tsx ./scripts/generate.ts",
-    "clean": "tsc --build --clean",
-    "build:code": "tsc",
-    "build": "pnpm build:code && pnpm build:markdown"
+  "version": "0.1.0",
+  "engines": {
+    "node": ">= 20.x"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "description": "🌱 A micro library for testing your TypeScript types",
+  "scripts": {
+    "test:code": "tsc",
+    "test:build": "attw --pack",
+    "test": "pnpm run test:code && pnpm run test:build",
+    "build:markdown": "tsx ./scripts/generate.ts",
+    "clean": "tsx ./scripts/clean.mts",
+    "build:code": "tsc --project tsconfig.build.json",
+    "build": "pnpm clean && pnpm build:code && pnpm build:markdown"
+  },
+  "license": "MIT",
+  "keywords": [
+    "typescript",
+    "ts",
+    "types",
+    "utility",
+    "util",
+    "utilities",
+    "testing",
+    "type",
+    "generics"
+  ],
   "devDependencies": {
-    "@types/node": "^18.14.0",
-    "tsx": "^3.12.3",
-    "typescript": "^4.9.5"
+    "@arethetypeswrong/cli": "^0.11.0",
+    "@types/node": "^20.8.2",
+    "tsx": "^3.13.0",
+    "typescript": "^5.2.2"
   }
 }
