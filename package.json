@@ -1,9 +1,10 @@
 {
   "name": "type-testing",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "engines": {
     "node": ">= 20.x"
   },
+  "repository": "https://github.com/MichiganTypeScript/type-testing",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
