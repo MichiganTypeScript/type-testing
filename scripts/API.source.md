@@ -5,11 +5,13 @@
   - [NotEqual](#notequal)
   - [Expect](#expect)
   - [ExpectFalse](#expectfalse)
+  - [Extends](#extends)
   - [IsAny](#isany)
   - [IsNever](#isnever)
   - [IsTuple](#istuple)
   - [IsUnion](#isunion)
   - [IsUnknown](#isunknown)
+  - [SimpleEqual](#simpleequals)
   - [TrueCases](#truecases)
   - [FalseCases](#falsecases)
 
@@ -28,6 +30,10 @@
 ## ExpectFalse
 
 <!-- Insert JSDoc: ExpectFalse -->
+
+## Extends
+
+<!-- Insert JSDoc: Extends -->
 
 ## IsAny
 
@@ -48,6 +54,10 @@
 ## IsUnknown
 
 <!-- Insert JSDoc: IsUnknown -->
+
+## SimpleEqual
+
+<!-- Insert JSDoc: SimpleEqual -->
 
 ## TrueCases
 

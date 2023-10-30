@@ -5,11 +5,13 @@
   - [NotEqual](#notequal)
   - [Expect](#expect)
   - [ExpectFalse](#expectfalse)
+  - [Extends](#extends)
   - [IsAny](#isany)
   - [IsNever](#isnever)
   - [IsTuple](#istuple)
   - [IsUnion](#isunion)
   - [IsUnknown](#isunknown)
+  - [SimpleEqual](#simpleequals)
   - [TrueCases](#truecases)
   - [FalseCases](#falsecases)
 
@@ -60,6 +62,37 @@ IsFalse<0>;
 IsFalse<undefined>;
 IsFalse<null>;
 IsFalse<unknown>;
+```
+
+## Extends
+
+ONLY use this type if you know exactly what you're doing.
+
+This type appears to return `true` if and only if `A extends B`, however, if you look at the tests you'll find that this is unfortunately not quite exactly how TypeScript works.  There are many edge cases that return surprising results due to how TypeScript is structured.  Of course these results may make sense eventually if you look deeply enough at them, but the hazard is always present.
+
+For example, distributivity is in play any time you set up `extends` clauses, which means that it can actually return _MULTIPLE_ paths at once (yielding a return type of `boolean`) or even _NO PATHS_ (yielding a return type of `never`).
+
+```ts
+Extends<1 & 2, never> //=> never
+Extends<string & number, never> //=> never
+Extends<never, never> //=> never
+
+Extends<any, never> //=> boolean
+Extends<1 | 2, 1> //=> boolean
+Extends<boolean, true> //=> boolean
+Extends<any, 1> //=> boolean
+
+Extends<[], unknown[]> //=> true
+Extends<unknown[], []> //=> false
+
+Extends<any, {}> //=> boolean
+Extends<{}, any> //=> true
+
+Extends<never, 1> //=> never
+Extends<1, never> //=> false
+
+Extends<{}, unknown> //=> true
+Extends<unknown, {}> //=> false
 ```
 
 ## IsAny
@@ -159,6 +192,22 @@ This predicate tests for whether a given value is `unknown`.
 
 It will return `true` for `unknown` (and any value that resolves to unknown such as `never | unknown` or `{} | unknown`).
 It will return `false` for all other values (including values that resolve to something that is not unknown such as `any | unknown`).
+
+## SimpleEqual
+
+ONLY use this type if you know exactly what you're doing.  You probably want `Equal` instead.
+
+This type appears to return `true` if and only if `A extends B` _and_ `B extends A`.  However, if you look at the tests you'll find that this is unfortunately not quite exactly how TypeScript works.  There are many edge cases that return surprising results due to how TypeScript is structured.  Of course these results may make sense eventually if you look deeply enough at them, but the hazard is always present.
+
+For example, distributivity is in play any time you set up `extends` clauses, which means that it can actually return _MULTIPLE_ paths at once (yielding a return type of `boolean`) or even _NO PATHS_ (yielding a return type of `never`).
+
+```ts
+SimpleEqual<1 & 2, never> //=> never (`Equal` returns `true`)
+SimpleEqual<never, 1> //=> never (`Equal` returns `false`)
+SimpleEqual<boolean, boolean> //=> boolean (`Equal` returns `true`)
+SimpleEqual<true, boolean> //=> boolean (`Equal` returns `false`)
+SimpleEqual<1 | 2, 1> //=> boolean (`Equal` returns `false`)
+```
 
 ## TrueCases
 

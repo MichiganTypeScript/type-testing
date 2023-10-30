@@ -103,11 +103,13 @@ type test_return = Expect<Equal<
 - [`NotEqual`](./API.md#notequal)
 - [`Expect`](./API.md#expect)
 - [`ExpectFalse`](./API.md#expectfalse)
+- [`Extends`](./API.md#extends)
 - [`IsAny`](./API.md#isany)
 - [`IsNever`](./API.md#isnever)
 - [`IsTuple`](./API.md#istuple)
 - [`IsUnion`](./API.md#isunion)
 - [`TrueCases`](./API.md#truecases)
+- [`SimpleEqual`](./API.md#simpleEquals)
 - [`FalseCases`](./API.md#falsecases)
 
 Also, if you just install and start using the library you'll discover that every type has lots of JSDoc description to help you along the way!
